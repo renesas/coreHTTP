@@ -4,4 +4,4 @@
 	update = none
 [submodule "source/dependency/3rdparty/llhttp"]
 	path = source/dependency/3rdparty/llhttp
-	url = https://github.com/nodejs/llhttp.git
+	url = git@pbgitap01.rea.renesas.com:peaks/llhttp.git
