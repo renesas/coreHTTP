@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.6"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>coreHTTP: Data Structures</title>
+<title>coreHTTP: HTTPClient_SendHttpData</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -71,7 +71,7 @@ var searchBox = new SearchBox("searchBox", "search/",'.html');
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('annotated.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('httpclient_sendhttpdata_function.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -96,23 +96,31 @@ $(document).ready(function(){initNavTree('annotated.html',''); initResizable(); 
 </div>
 </div>
 
-<div class="header">
-  <div class="headertitle"><div class="title">Data Structures</div></div>
+<div><div class="header">
+  <div class="headertitle"><div class="title">HTTPClient_SendHttpData </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock">Here are the data structures with brief descriptions:</div><div class="directory">
-<table class="directory">
-<tr id="row_0_" class="even"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><span class="icona"><span class="icon">C</span></span><a class="el" href="structfind_header_context__t.html" target="_self">findHeaderContext_t</a></td><td class="desc">An aggregator that represents the user-provided parameters to the <a class="el" href="core__http__client_8c.html#ac621a0756f290f1437e2c72a24e5b0f9" title="Read a header from a buffer containing a complete HTTP response. This will return the location of the...">HTTPClient_ReadHeader</a> API function. This will be used as context parameter for the parsing callbacks used by the API function </td></tr>
-<tr id="row_1_" class="odd"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><span class="icona"><span class="icon">C</span></span><a class="el" href="struct_h_t_t_p_client___response_header_parsing_callback__t.html" target="_self">HTTPClient_ResponseHeaderParsingCallback_t</a></td><td class="desc">Callback to intercept headers during the first parse through of the response as it is received from the network </td></tr>
-<tr id="row_2_" class="even"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><span class="icona"><span class="icon">C</span></span><a class="el" href="struct_h_t_t_p_parsing_context__t.html" target="_self">HTTPParsingContext_t</a></td><td class="desc">The HTTP response parsing context for a response fresh from the server. This context is passed into the http-parser registered callbacks. The registered callbacks are private functions of the form httpParserXXXXCallbacks() </td></tr>
-<tr id="row_3_" class="odd"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><span class="icona"><span class="icon">C</span></span><a class="el" href="struct_h_t_t_p_request_headers__t.html" target="_self">HTTPRequestHeaders_t</a></td><td class="desc">Represents header data that will be sent in an HTTP request </td></tr>
-<tr id="row_4_" class="even"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><span class="icona"><span class="icon">C</span></span><a class="el" href="struct_h_t_t_p_request_info__t.html" target="_self">HTTPRequestInfo_t</a></td><td class="desc">Configurations of the initial request headers </td></tr>
-<tr id="row_5_" class="odd"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><span class="icona"><span class="icon">C</span></span><a class="el" href="struct_h_t_t_p_response__t.html" target="_self">HTTPResponse_t</a></td><td class="desc">Represents an HTTP response </td></tr>
-<tr id="row_6_" class="even"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><span class="icona"><span class="icon">C</span></span><a class="el" href="struct_transport_interface__t.html" target="_self">TransportInterface_t</a></td><td class="desc">The transport layer interface </td></tr>
-<tr id="row_7_" class="odd"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><span class="icona"><span class="icon">C</span></span><a class="el" href="struct_transport_out_vector__t.html" target="_self">TransportOutVector_t</a></td><td class="desc">Transport vector structure for sending multiple messages </td></tr>
-</table>
-</div><!-- directory -->
-</div><!-- contents -->
+<div class="textblock"><div class="fragment"><div class="line"><a class="code hl_enumeration" href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a> <a class="code hl_function" href="core__http__client_8c.html#af482c62724018d1d4ebf4de4745c492c">HTTPClient_SendHttpData</a>( <span class="keyword">const</span> <a class="code hl_struct" href="struct_transport_interface__t.html">TransportInterface_t</a> * pTransport,</div>
+<div class="line">                                      <a class="code hl_typedef" href="group__http__callback__types.html#ga32d6894c1c9d62568136203b57c6d796">HTTPClient_GetCurrentTimeFunc_t</a> getTimestampMs,</div>
+<div class="line">                                      <span class="keyword">const</span> uint8_t * pData,</div>
+<div class="line">                                      <span class="keywordtype">size_t</span> dataLen );</div>
+<div class="ttc" id="acore__http__client_8c_html_af482c62724018d1d4ebf4de4745c492c"><div class="ttname"><a href="core__http__client_8c.html#af482c62724018d1d4ebf4de4745c492c">HTTPClient_SendHttpData</a></div><div class="ttdeci">HTTPStatus_t HTTPClient_SendHttpData(const TransportInterface_t *pTransport, HTTPClient_GetCurrentTimeFunc_t getTimestampMs, const uint8_t *pData, size_t dataLen)</div><div class="ttdoc">Send the request body in pRequestBodyBuf over the transport.</div><div class="ttdef"><b>Definition:</b> core_http_client.c:1814</div></div>
+<div class="ttc" id="agroup__http__callback__types_html_ga32d6894c1c9d62568136203b57c6d796"><div class="ttname"><a href="group__http__callback__types.html#ga32d6894c1c9d62568136203b57c6d796">HTTPClient_GetCurrentTimeFunc_t</a></div><div class="ttdeci">uint32_t(* HTTPClient_GetCurrentTimeFunc_t)(void)</div><div class="ttdoc">Application provided function to query the current time in milliseconds.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:463</div></div>
+<div class="ttc" id="agroup__http__enum__types_html_ga39fad9050063a355ffd95e95381e743f"><div class="ttname"><a href="group__http__enum__types.html#ga39fad9050063a355ffd95e95381e743f">HTTPStatus_t</a></div><div class="ttdeci">HTTPStatus_t</div><div class="ttdoc">The HTTP Client library return status.</div><div class="ttdef"><b>Definition:</b> core_http_client.h:196</div></div>
+<div class="ttc" id="astruct_transport_interface__t_html"><div class="ttname"><a href="struct_transport_interface__t.html">TransportInterface_t</a></div><div class="ttdoc">The transport layer interface.</div><div class="ttdef"><b>Definition:</b> transport_interface.h:299</div></div>
+</div><!-- fragment --><p>Send the request body in <code>pRequestBodyBuf</code> over the transport.  </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pTransport</td><td>Transport interface, see <a class="el" href="struct_transport_interface__t.html" title="The transport layer interface.">TransportInterface_t</a> for more information. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">getTimestampMs</td><td>Function to retrieve a timestamp in milliseconds. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pData</td><td>HTTP request data to send. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dataLen</td><td>HTTP request data length.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa68f5addd5bf4367e177957a4c43dd4bd" title="The HTTP Client library function completed successfully.">HTTPSuccess</a> if successful. If there was a network error or less bytes than what were specified were sent, then <a class="el" href="group__http__enum__types.html#gga39fad9050063a355ffd95e95381e743fa59fa581a112b1994db1c45d8a7f84160" title="A network error was returned from the transport interface.">HTTPNetworkError</a> is returned.   </dd></dl>
+</div></div><!-- contents -->
+</div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
