@@ -1,7 +1,7 @@
 [submodule "test/unit-test/CMock"]
 	path = test/unit-test/CMock
-	url = https://github.com/ThrowTheSwitch/CMock.git
+	url = http://pbgitap01.rea.renesas.com/mirrors/CMock.git
 	update = none
 [submodule "source/dependency/3rdparty/llhttp"]
 	path = source/dependency/3rdparty/llhttp
-	url = https://github.com/renesas/llhttp.git
+	url = http://pbgitap01.rea.renesas.com/mirrors/llhttp.git
