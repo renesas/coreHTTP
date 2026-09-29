@@ -1,5 +1,5 @@
 /*
- * coreHTTP v3.1.1
+ * coreHTTP
  * Copyright (C) 2024 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -445,6 +445,7 @@ static llhttp_errno_t llhttp_execute_error( llhttp_t * pParser,
     return httpParsingErrno;
 }
 
+
 /* Mock helper that parses the status line starting from pNext. */
 static void helper_parse_status_line( const char ** pNext,
                                       llhttp_t * pParser,
@@ -573,6 +574,33 @@ static void helper_parse_body( const char ** pNext,
             pSettings->on_body( pParser, pBody, bodyLen );
         }
     }
+}
+
+/* Mocked llhttp_execute callback that parses the status line, then invokes
+ * on_header_field with a zero-length field name to exercise the early return
+ * guard in httpParserOnHeaderFieldCallback. */
+static llhttp_errno_t llhttp_execute_zero_length_header_field( llhttp_t * pParser,
+                                                               const char * pData,
+                                                               size_t len,
+                                                               int cmock_num_calls )
+{
+    ( void ) cmock_num_calls;
+    ( void ) len;
+    const char * pNext = pData;
+    llhttp_settings_t * pSettings = ( llhttp_settings_t * ) pParser->settings;
+    int cbReturnValue = 0;
+
+    pSettings->on_message_begin( pParser );
+    helper_parse_status_line( &pNext, pParser, pSettings );
+
+    /* Invoke on_header_field with length zero. The real callback should return
+     * LLHTTP_STOP_PARSING. */
+    cbReturnValue = pSettings->on_header_field( pParser, pNext, 0 );
+    TEST_ASSERT_EQUAL( LLHTTP_STOP_PARSING, cbReturnValue );
+
+    pParser->error = HPE_USER;
+    httpParserExecuteCallCount++;
+    return HPE_USER;
 }
 
 /* Mocked llhttp_execute callback that expects a whole response to be in
@@ -760,6 +788,32 @@ static llhttp_errno_t llhttp_execute_partial_body( llhttp_t * pParser,
     return HPE_OK;
 }
 
+
+/* Mocked llhttp_execute callback that will be called when partial body has been
+ * received from the network. It returns HPE_PAUSED to mimic stopping parsing
+ * the body because user set HTTP_RESPONSE_DO_NOT_PARSE_BODY_FLAG. */
+static llhttp_errno_t llhttp_execute_partial_body_do_not_parse( llhttp_t * pParser,
+                                                                const char * pData,
+                                                                size_t len,
+                                                                int cmock_num_calls )
+{
+    ( void ) cmock_num_calls;
+    ( void ) len;
+
+    const char * pNext = pData;
+    llhttp_settings_t * pSettings = ( llhttp_settings_t * ) pParser->settings;
+
+    pSettings->on_message_begin( pParser );
+
+    helper_parse_status_line( &pNext, pParser, pSettings );
+    helper_parse_headers( &pNext, pParser, pSettings );
+    helper_parse_headers_finish( &pNext, pParser, pSettings, NULL );
+
+    pParser->error_pos = pNext;
+    pParser->error = HPE_PAUSED;
+    return HPE_PAUSED;
+}
+
 /* Mocked llhttp_execute callback that will be on a response of type
  * transfer-encoding chunked. */
 static llhttp_errno_t llhttp_execute_chunked_body( llhttp_t * pParser,
@@ -768,6 +822,7 @@ static llhttp_errno_t llhttp_execute_chunked_body( llhttp_t * pParser,
                                                    int cmock_num_calls )
 {
     ( void ) cmock_num_calls;
+    ( void ) len;
 
     const char * pNext = pData;
     uint8_t isHeadResponse = 0;
@@ -1149,6 +1204,47 @@ void test_HTTPClient_Send_parse_partial_body( void )
                        response.headersLen );
     TEST_ASSERT_EQUAL( response.pHeaders + HTTP_TEST_RESPONSE_GET_HEADERS_LENGTH, response.pBody );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_GET_BODY_LENGTH, response.bodyLen );
+    TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
+    TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_GET_CONTENT_LENGTH, response.contentLength );
+    TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_GET_HEADER_COUNT, response.headerCount );
+    TEST_ASSERT_BITS_HIGH( HTTP_RESPONSE_CONNECTION_CLOSE_FLAG, response.respFlags );
+    TEST_ASSERT_BITS_LOW( HTTP_RESPONSE_CONNECTION_KEEP_ALIVE_FLAG, response.respFlags );
+}
+
+/*-----------------------------------------------------------*/
+
+/* Test successfully parsing a response where up to the middle of the body
+ * is received on the first network read, then the rest of the response is not
+ * received from the network because HTTP_RESPONSE_DO_NOT_PARSE_BODY_FLAG is set.
+ */
+void test_HTTPClient_Send_do_not_parse_partial_body( void )
+{
+    HTTPStatus_t returnStatus = HTTPSuccess;
+
+    llhttp_execute_Stub( llhttp_execute_partial_body_do_not_parse );
+
+    memcpy( requestHeaders.pBuffer,
+            HTTP_TEST_REQUEST_GET_HEADERS,
+            HTTP_TEST_REQUEST_GET_HEADERS_LENGTH );
+    requestHeaders.headersLen = HTTP_TEST_REQUEST_GET_HEADERS_LENGTH;
+    pNetworkData = ( uint8_t * ) HTTP_TEST_RESPONSE_GET;
+    networkDataLen = HTTP_TEST_RESPONSE_GET_LENGTH;
+    firstPartBytes = HTTP_TEST_RESPONSE_GET_PARTIAL_BODY_LENGTH;
+
+    response.respOptionFlags |= HTTP_RESPONSE_DO_NOT_PARSE_BODY_FLAG;
+
+    returnStatus = HTTPClient_Send( &transportInterface,
+                                    &requestHeaders,
+                                    NULL,
+                                    0,
+                                    &response,
+                                    0 );
+    TEST_ASSERT_EQUAL( HTTPSuccess, returnStatus );
+    TEST_ASSERT_EQUAL( response.pBuffer + ( sizeof( HTTP_STATUS_LINE_OK ) - 1 ), response.pHeaders );
+    TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_GET_HEADERS_LENGTH - HTTP_HEADER_END_INDICATOR_LEN,
+                       response.headersLen );
+    TEST_ASSERT_EQUAL( response.pHeaders + HTTP_TEST_RESPONSE_GET_HEADERS_LENGTH, response.pBody );
+    TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_GET_PARTIAL_BODY_LENGTH - HTTP_TEST_RESPONSE_HEAD_LENGTH, response.bodyLen );
     TEST_ASSERT_EQUAL( HTTP_STATUS_CODE_OK, response.statusCode );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_GET_CONTENT_LENGTH, response.contentLength );
     TEST_ASSERT_EQUAL( HTTP_TEST_RESPONSE_GET_HEADER_COUNT, response.headerCount );
@@ -1890,5 +1986,26 @@ void test_HTTPClient_Send_parsing_errors( void )
                                     0,
                                     &response,
                                     0 );
+    TEST_ASSERT_EQUAL( HTTPParserInternalError, returnStatus );
+}
+
+/* Test that httpParserOnHeaderFieldCallback returns LLHTTP_STOP_PARSING when
+ * the parser invokes it with a zero-length header field name (lines 720-724
+ * of core_http_client.c). */
+void test_HTTPClient_Send_zero_length_header_field( void )
+{
+    HTTPStatus_t returnStatus = HTTPSuccess;
+
+    llhttp_execute_Stub( llhttp_execute_zero_length_header_field );
+
+    returnStatus = HTTPClient_Send( &transportInterface,
+                                    &requestHeaders,
+                                    NULL,
+                                    0,
+                                    &response,
+                                    0 );
+
+    /* HPE_USER falls through to the default case in processLlhttpError,
+     * which maps to HTTPParserInternalError. */
     TEST_ASSERT_EQUAL( HTTPParserInternalError, returnStatus );
 }

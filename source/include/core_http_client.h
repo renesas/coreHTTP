@@ -1,5 +1,5 @@
 /*
- * coreHTTP v3.1.1
+ * coreHTTP
  * Copyright (C) 2024 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -38,6 +38,16 @@
     extern "C" {
 #endif
 /* *INDENT-ON* */
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * The current version of this library.
+ *
+ * If HTTP_LIBRARY_VERSION ends with + it represents the version in development
+ * after the numbered release.
+ */
+#define HTTP_LIBRARY_VERSION    "v3.1.3"
+/** @endcond */
 
 /* HTTP_DO_NOT_USE_CUSTOM_CONFIG allows building the HTTP Client library
  * without a config file. If a config file is provided, the

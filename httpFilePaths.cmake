@@ -12,8 +12,16 @@ set( HTTP_SOURCES
      ${CMAKE_CURRENT_LIST_DIR}/source/dependency/3rdparty/llhttp/src/llhttp.c
      ${CMAKE_CURRENT_LIST_DIR}/source/dependency/3rdparty/llhttp/src/http.c )
 
+# HTTP library public include directories without transport interface.
+set( HTTP_INCLUDE_NO_INTERFACE_PUBLIC_DIRS
+     ${CMAKE_CURRENT_LIST_DIR}/source/include
+     ${CMAKE_CURRENT_LIST_DIR}/source/dependency/3rdparty/llhttp/include )
+
+# Transport interface include directory.
+set( HTTP_TRANSPORT_INTERFACE_INCLUDE_DIRS
+     ${CMAKE_CURRENT_LIST_DIR}/source/interface )
+
 # HTTP library public include directories.
 set( HTTP_INCLUDE_PUBLIC_DIRS
-     ${CMAKE_CURRENT_LIST_DIR}/source/include
-     ${CMAKE_CURRENT_LIST_DIR}/source/interface
-     ${CMAKE_CURRENT_LIST_DIR}/source/dependency/3rdparty/llhttp/include )
+     ${HTTP_INCLUDE_NO_INTERFACE_PUBLIC_DIRS}
+     ${HTTP_TRANSPORT_INTERFACE_INCLUDE_DIRS} )

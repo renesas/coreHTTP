@@ -1,5 +1,24 @@
 # Changelog for coreHTTP Client Library
 
+## v3.1.3 (March 2026)
+- [#204](https://github.com/FreeRTOS/coreHTTP/pull/204) Replace reachable assert with error return in header field callbacks and bump llhttp to v9.3.1.
+
+## v3.1.2 (January 2026)
+- [#200](https://github.com/FreeRTOS/coreHTTP/pull/200) Add write permissions to doxygen generation workflow on main.
+- [#199](https://github.com/FreeRTOS/coreHTTP/pull/199) Fix MISRA violations.
+- [#197](https://github.com/FreeRTOS/coreHTTP/pull/197) Add CMakeLists.txt for coreHTTP library.
+- [#196](https://github.com/FreeRTOS/coreHTTP/pull/196) Update manifest to list CMock as a test dependency.
+- [#195](https://github.com/FreeRTOS/coreHTTP/pull/195) Remove version numbers from source files.
+- [#194](https://github.com/FreeRTOS/coreHTTP/pull/194) Return HTTPSuccess when HTTP_RESPONSE_DO_NOT_PARSE_BODY_FLAG is set.
+- [#191](https://github.com/FreeRTOS/coreHTTP/pull/191) Remove formatting bot workflow.
+- [#189](https://github.com/FreeRTOS/coreHTTP/pull/189) Fix comment in config defaults header file.
+- [#188](https://github.com/FreeRTOS/coreHTTP/pull/188) Follow Security Guide to update YAML files.
+- [#187](https://github.com/FreeRTOS/coreHTTP/pull/187) Update GitHub Actions workflows as per security guidelines.
+- [#186](https://github.com/FreeRTOS/coreHTTP/pull/186) Replace Synopsys link with blackduck one to solve link error.
+- [#184](https://github.com/FreeRTOS/coreHTTP/pull/184) Adjust proof tooling to support CBMC v6.
+- [#183](https://github.com/FreeRTOS/coreHTTP/pull/183) Update LTS 202406 information.
+- [#181](https://github.com/FreeRTOS/coreHTTP/pull/181) Bump CBMC version to 5.95.1.
+
 ## v3.1.1 (June 2024)
 - Fix doxygen deployment on Github.
 

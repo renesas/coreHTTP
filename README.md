@@ -20,16 +20,10 @@ safety and data structure invariance through the
 See memory requirements for this library
 [here](./docs/doxygen/include/size_table.md).
 
-**coreHTTP v3.0.0
-[source code](https://github.com/FreeRTOS/coreHTTP/tree/v3.0.0/source) is part
+**coreHTTP v3.1.1
+[source code](https://github.com/FreeRTOS/coreHTTP/tree/v3.1.1/source) is part
 of the
-[FreeRTOS 202210.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202210.00-LTS)
-release.**
-
-**coreHTTP v2.0.0
-[source code](https://github.com/FreeRTOS/coreHTTP/tree/v2.0.0/source) is part
-of the
-[FreeRTOS 202012.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202012.00-LTS)
+[FreeRTOS 202406.00 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202406.00-LTS)
 release.**
 
 ## coreHTTP Config File
@@ -122,7 +116,7 @@ locations below:
 |                                                       Location                                                       |
 | :------------------------------------------------------------------------------------------------------------------: |
 | [AWS IoT Device SDK for Embedded C](https://github.com/aws/aws-iot-device-sdk-embedded-C#releases-and-documentation) |
-|       [FreeRTOS.org](https://freertos.org/Documentation/api-ref/coreHTTP/docs/doxygen/output/html/index.html)        |
+|       [API Documentation](https://freertos.github.io/coreHTTP/main/index.html)        |
 
 Note that the latest included version of coreHTTP may differ across
 repositories.

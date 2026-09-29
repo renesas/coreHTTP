@@ -1,5 +1,5 @@
 /*
- * coreHTTP v3.1.1
+ * coreHTTP
  * Copyright (C) 2024 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT

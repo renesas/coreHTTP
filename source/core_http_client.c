@@ -1,5 +1,5 @@
 /*
- * coreHTTP v3.1.1
+ * coreHTTP
  * Copyright (C) 2024 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -137,7 +137,7 @@ static HTTPStatus_t addRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  * @param[in] parsingState State of the parsing on the HTTP response.
  * @param[in] totalReceived The amount of network data received in the response
  * buffer.
- * @param[in] responseBufferLen The length of the response buffer.
+ * @param[in] pResponse  The response information.
  *
  * @return Returns #HTTPSuccess if the parsing state is complete. If
  * the parsing state denotes it never started, then return #HTTPNoResponse. If
@@ -147,7 +147,7 @@ static HTTPStatus_t addRangeHeader( HTTPRequestHeaders_t * pRequestHeaders,
  */
 static HTTPStatus_t getFinalResponseStatus( HTTPParsingState_t parsingState,
                                             size_t totalReceived,
-                                            size_t responseBufferLen );
+                                            const HTTPResponse_t * pResponse );
 
 /**
  * @brief Send the HTTP request over the network.
@@ -717,6 +717,12 @@ static int httpParserOnHeaderFieldCallback( llhttp_t * pHttpParser,
     assert( pHttpParser->data != NULL );
     assert( pLoc != NULL );
 
+    if( length == 0U )
+    {
+        LogError( ( "Received zero-length header field name from parser." ) );
+        return LLHTTP_STOP_PARSING;
+    }
+
     pParsingContext = ( HTTPParsingContext_t * ) ( pHttpParser->data );
     pResponse = pParsingContext->pResponse;
 
@@ -1006,14 +1012,14 @@ static void initializeParsingContextForFirstResponse( HTTPParsingContext_t * pPa
 
     /* Initialize the callbacks that llhttp_execute will invoke. */
     llhttp_settings_init( &( pParsingContext->llhttpSettings ) );
-    pParsingContext->llhttpSettings.on_message_begin = httpParserOnMessageBeginCallback;
-    pParsingContext->llhttpSettings.on_status = httpParserOnStatusCallback;
-    pParsingContext->llhttpSettings.on_status_complete = httpParserOnStatusCompleteCallback;
-    pParsingContext->llhttpSettings.on_header_field = httpParserOnHeaderFieldCallback;
-    pParsingContext->llhttpSettings.on_header_value = httpParserOnHeaderValueCallback;
-    pParsingContext->llhttpSettings.on_headers_complete = httpParserOnHeadersCompleteCallback;
-    pParsingContext->llhttpSettings.on_body = httpParserOnBodyCallback;
-    pParsingContext->llhttpSettings.on_message_complete = httpParserOnMessageCompleteCallback;
+    pParsingContext->llhttpSettings.on_message_begin = &httpParserOnMessageBeginCallback;
+    pParsingContext->llhttpSettings.on_status = &httpParserOnStatusCallback;
+    pParsingContext->llhttpSettings.on_status_complete = &httpParserOnStatusCompleteCallback;
+    pParsingContext->llhttpSettings.on_header_field = &httpParserOnHeaderFieldCallback;
+    pParsingContext->llhttpSettings.on_header_value = &httpParserOnHeaderValueCallback;
+    pParsingContext->llhttpSettings.on_headers_complete = &httpParserOnHeadersCompleteCallback;
+    pParsingContext->llhttpSettings.on_body = &httpParserOnBodyCallback;
+    pParsingContext->llhttpSettings.on_message_complete = &httpParserOnMessageCompleteCallback;
 
     /* Initialize the third-party HTTP parser to parse responses. */
     llhttp_init( &( pParsingContext->llhttpParser ), HTTP_RESPONSE, &( pParsingContext->llhttpSettings ) );
@@ -1829,7 +1835,7 @@ HTTPStatus_t HTTPClient_SendHttpData( const TransportInterface_t * pTransport,
 
     /* If the timestamp function was undefined by the application, then do not
      * retry the transport send. */
-    if( getTimestampMs == getZeroTimestampMs )
+    if( getTimestampMs == &getZeroTimestampMs )
     {
         retryTimeoutMs = 0U;
     }
@@ -1984,13 +1990,13 @@ static HTTPStatus_t sendHttpBody( const TransportInterface_t * pTransport,
 
 static HTTPStatus_t getFinalResponseStatus( HTTPParsingState_t parsingState,
                                             size_t totalReceived,
-                                            size_t responseBufferLen )
+                                            const HTTPResponse_t * pResponse )
 {
     HTTPStatus_t returnStatus = HTTPSuccess;
 
     assert( parsingState >= HTTP_PARSING_NONE &&
             parsingState <= HTTP_PARSING_COMPLETE );
-    assert( totalReceived <= responseBufferLen );
+    assert( totalReceived <= pResponse->bufferLen );
 
     /* If no parsing occurred, that means network data was never received. */
     if( parsingState == HTTP_PARSING_NONE )
@@ -2002,21 +2008,26 @@ static HTTPStatus_t getFinalResponseStatus( HTTPParsingState_t parsingState,
     }
     else if( parsingState == HTTP_PARSING_INCOMPLETE )
     {
-        if( totalReceived == responseBufferLen )
+        /* HTTP_PARSING_INCOMPLETE is okay when HTTP_RESPONSE_DO_NOT_PARSE_BODY_FLAG is set
+         * as the body data may yet to be read from the transport. */
+        if( ( pResponse->respOptionFlags & HTTP_RESPONSE_DO_NOT_PARSE_BODY_FLAG ) == 0U )
         {
-            LogError( ( "Cannot receive complete response from transport"
-                        " interface: Response buffer has insufficient "
-                        "space: responseBufferLen=%lu",
-                        ( unsigned long ) responseBufferLen ) );
-            returnStatus = HTTPInsufficientMemory;
-        }
-        else
-        {
-            LogError( ( "Received partial response from transport "
-                        "receive(): ResponseSize=%lu, TotalBufferSize=%lu",
-                        ( unsigned long ) totalReceived,
-                        ( unsigned long ) ( responseBufferLen - totalReceived ) ) );
-            returnStatus = HTTPPartialResponse;
+            if( totalReceived == pResponse->bufferLen )
+            {
+                LogError( ( "Cannot receive complete response from transport"
+                            " interface: Response buffer has insufficient "
+                            "space: responseBufferLen=%lu",
+                            ( unsigned long ) pResponse->bufferLen ) );
+                returnStatus = HTTPInsufficientMemory;
+            }
+            else
+            {
+                LogError( ( "Received partial response from transport "
+                            "receive(): ResponseSize=%lu, TotalBufferSize=%lu",
+                            ( unsigned long ) totalReceived,
+                            ( unsigned long ) ( pResponse->bufferLen - totalReceived ) ) );
+                returnStatus = HTTPPartialResponse;
+            }
         }
     }
     else
@@ -2052,7 +2063,7 @@ HTTPStatus_t HTTPClient_ReceiveAndParseHttpResponse( const TransportInterface_t 
 
     /* If the timestamp function was undefined by the application, then do not
      * retry the transport receive. */
-    if( pResponse->getTime == getZeroTimestampMs )
+    if( pResponse->getTime == &getZeroTimestampMs )
     {
         retryTimeoutMs = 0U;
     }
@@ -2155,7 +2166,7 @@ HTTPStatus_t HTTPClient_ReceiveAndParseHttpResponse( const TransportInterface_t 
          * the parsing and how much data is in the buffer. */
         returnStatus = getFinalResponseStatus( parsingContext.state,
                                                totalReceived,
-                                               pResponse->bufferLen );
+                                               pResponse );
     }
 
     return returnStatus;
@@ -2281,7 +2292,7 @@ HTTPStatus_t HTTPClient_Send( const TransportInterface_t * pTransport,
         {
             /* Set a zero timestamp function when the application did not configure
              * one. */
-            pResponse->getTime = getZeroTimestampMs;
+            pResponse->getTime = &getZeroTimestampMs;
         }
 
         returnStatus = HTTPSuccess;
@@ -2318,7 +2329,12 @@ static int findHeaderFieldParserCallback( llhttp_t * pHttpParser,
     assert( pHttpParser != NULL );
     assert( pHttpParser->data != NULL );
     assert( pFieldLoc != NULL );
-    assert( fieldLen > 0U );
+
+    if( fieldLen == 0U )
+    {
+        LogError( ( "Received zero-length header field name from parser." ) );
+        return LLHTTP_STOP_PARSING;
+    }
 
     pContext = ( findHeaderContext_t * ) pHttpParser->data;
 
@@ -2466,9 +2482,9 @@ static HTTPStatus_t findHeaderInResponse( const uint8_t * pBuffer,
      * need to create a private context in llhttp->data that has the field and
      * value to update and pass back. */
     llhttp_settings_init( &parserSettings );
-    parserSettings.on_header_field = findHeaderFieldParserCallback;
-    parserSettings.on_header_value = findHeaderValueParserCallback;
-    parserSettings.on_headers_complete = findHeaderOnHeaderCompleteCallback;
+    parserSettings.on_header_field = &findHeaderFieldParserCallback;
+    parserSettings.on_header_value = &findHeaderValueParserCallback;
+    parserSettings.on_headers_complete = &findHeaderOnHeaderCompleteCallback;
     llhttp_init( &parser, HTTP_RESPONSE, &parserSettings );
 
     /* Set the context for the parser. */
